@@ -8,3 +8,12 @@ data class xkcdComic(
     val month: Int,
     val year: Int
 )
+
+val xkcdComicDefault = xkcdComic(
+    number = 1,
+    title = "Barrel - Part 1",
+    imageUrl = "https://imgs.xkcd.com/comics/barrel_cropped_(1).jpg",
+    day = 1,
+    month = 1,
+    year = 2006
+)

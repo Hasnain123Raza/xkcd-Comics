@@ -10,10 +10,10 @@ interface ComicDao {
     fun getComics(): LiveData<List<DatabaseComic>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAll(comics: List<DatabaseComic>)
+    suspend fun insertAll(comics: List<DatabaseComic>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(comic: DatabaseComic)
+    suspend fun insert(comic: DatabaseComic)
 }
 
 @Database(entities = [DatabaseComic::class], version = 2)

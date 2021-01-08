@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">xkcd Comics</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Slide Fragment Menu -->
+    <string name="fragmentslidemenu_share_menuitem">Share</string>
+
+
 </resources>
