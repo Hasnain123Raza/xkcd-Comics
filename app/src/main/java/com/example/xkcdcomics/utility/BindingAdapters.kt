@@ -2,9 +2,7 @@ package com.example.xkcdcomics.utility
 
 import android.graphics.drawable.Drawable
 import android.util.Log
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
 import com.bumptech.glide.TransitionOptions

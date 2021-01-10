@@ -3,7 +3,7 @@ package com.example.xkcdcomics.database
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.example.xkcdcomics.domain.xkcdComic
+import com.example.xkcdcomics.domain.XKCDComic
 
 @Entity
 data class DatabaseComic(
@@ -27,9 +27,9 @@ data class DatabaseComic(
     val year: Int
 )
 
-fun List<DatabaseComic>.asDomainModel(): List<xkcdComic> {
+fun List<DatabaseComic>.asDomainModel(): List<XKCDComic> {
     return map {
-        xkcdComic(
+        XKCDComic(
             number = it.number,
             title = it.title,
             imageUrl = it.imageUrl,

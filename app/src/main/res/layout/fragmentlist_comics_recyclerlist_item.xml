@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data>
+
+        <variable
+            name="comic"
+            type="com.example.xkcdcomics.domain.XKCDComic" />
+
+        <variable
+            name="comicCallback"
+            type="com.example.xkcdcomics.screens.list.ComicClick" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="6dp"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/fragmentlist_comics_recyclerlist_item_number_textview"
+            style="@style/TextAppearance.MaterialComponents.Body1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{Integer.toString(comic.number)}"
+            />
+
+        <HorizontalScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:scrollbars="none">
+
+            <TextView
+                android:id="@+id/fragmentlist_comics_recyclerlist_item_title_textview"
+                style="@style/TextAppearance.MaterialComponents.Body2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="@{() -> comicCallback.onClick(comic)}"
+                android:text="@{comic.title}" />
+        </HorizontalScrollView>
+    </LinearLayout>
+</layout>

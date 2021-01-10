@@ -6,5 +6,11 @@
     <!-- Slide Fragment Menu -->
     <string name="fragmentslidemenu_share_menuitem">Share</string>
 
+    <!-- List Fragment Menu -->
+    <string-array name="spinner_choices_array">
+        <item>asc</item>
+        <item>desc</item>
+    </string-array>
+
 
 </resources>

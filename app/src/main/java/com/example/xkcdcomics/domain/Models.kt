@@ -1,6 +1,6 @@
 package com.example.xkcdcomics.domain
 
-data class xkcdComic(
+data class XKCDComic(
     val number: Int,
     val title: String,
     val imageUrl: String,
@@ -9,7 +9,7 @@ data class xkcdComic(
     val year: Int
 )
 
-val xkcdComicDefault = xkcdComic(
+val xkcdComicDefault = XKCDComic(
     number = 1,
     title = "Barrel - Part 1",
     imageUrl = "https://imgs.xkcd.com/comics/barrel_cropped_(1).jpg",

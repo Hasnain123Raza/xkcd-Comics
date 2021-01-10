@@ -1,7 +1,7 @@
 package com.example.xkcdcomics.network
 
 import com.example.xkcdcomics.database.DatabaseComic
-import com.example.xkcdcomics.domain.xkcdComic
+import com.example.xkcdcomics.domain.XKCDComic
 import com.squareup.moshi.Json
 
 data class NetworkComic(
@@ -35,8 +35,8 @@ fun NetworkComic.asDatabaseComic(): DatabaseComic {
     )
 }
 
-fun NetworkComic.asDomainModel() : xkcdComic {
-    return xkcdComic(
+fun NetworkComic.asDomainModel() : XKCDComic {
+    return XKCDComic(
         number = number,
         title = title,
         imageUrl = imageUrl,

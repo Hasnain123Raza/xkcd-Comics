@@ -2,19 +2,16 @@ package com.example.xkcdcomics.screens.slide
 
 import android.app.Application
 import android.content.Context
-import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
 import android.widget.TextView
 import androidx.core.math.MathUtils
 import androidx.lifecycle.*
 import com.example.xkcdcomics.database.getComicDatabase
-import com.example.xkcdcomics.domain.xkcdComic
+import com.example.xkcdcomics.domain.XKCDComic
 import com.example.xkcdcomics.domain.xkcdComicDefault
 import com.example.xkcdcomics.repository.ComicsRepository
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.lang.Exception
@@ -24,7 +21,7 @@ class SlideViewModel(application: Application) : AndroidViewModel(application) {
 
     // Current Comic
     private val _currentComic = MutableLiveData(xkcdComicDefault)
-    val currentComic: LiveData<xkcdComic>
+    val currentComic: LiveData<XKCDComic>
         get() = _currentComic
 
     // Current Comic Number
