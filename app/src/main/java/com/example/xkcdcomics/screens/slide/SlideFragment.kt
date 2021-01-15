@@ -1,23 +1,23 @@
 package com.example.xkcdcomics.screens.slide
 
-import android.content.Context
 import android.os.Bundle
 import android.view.*
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.xkcdcomics.R
+import com.example.xkcdcomics.XKCDComicsApplication
 import com.example.xkcdcomics.databinding.FragmentSlideBinding
-import java.lang.Exception
+import javax.inject.Inject
 
 
 class SlideFragment : Fragment() {
 
+    @Inject
+    lateinit var modelFactory: ViewModelProvider.Factory
+
     private lateinit var binding: FragmentSlideBinding
-    private lateinit var viewModel: SlideViewModel
+    lateinit var viewModel: SlideViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,13 +50,13 @@ class SlideFragment : Fragment() {
             container, false
         )
 
-        viewModel = ViewModelProvider(
-            this,
-            SlideViewModel.Factory(requireNotNull(activity).application)
-        ).get(SlideViewModel::class.java)
+        (requireActivity().application as XKCDComicsApplication).applicationComponent.inject(this)
+        viewModel = ViewModelProvider(this, modelFactory).get(SlideViewModel::class.java)
 
         binding.lifecycleOwner = viewLifecycleOwner
         binding.viewModel = viewModel
+
+        viewModel.loadComic(SlideFragmentArgs.fromBundle(requireArguments()).number)
 
         return binding.root
     }

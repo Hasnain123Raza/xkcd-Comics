@@ -1,6 +1,5 @@
 package com.example.xkcdcomics.database
 
-import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.room.*
 
@@ -16,22 +15,7 @@ interface ComicDao {
     suspend fun insert(comic: DatabaseComic)
 }
 
-@Database(entities = [DatabaseComic::class], version = 2)
-abstract class ComicDatabase : RoomDatabase() {
+@Database(entities = [DatabaseComic::class], version = 4)
+abstract class ComicsDatabase : RoomDatabase() {
     abstract val comicDao : ComicDao
-}
-
-private lateinit var INSTANCE: ComicDatabase
-
-fun getComicDatabase(context: Context): ComicDatabase {
-    synchronized(ComicDatabase::class.java) {
-        if (!::INSTANCE.isInitialized) {
-            INSTANCE = Room.databaseBuilder(context.applicationContext,
-                ComicDatabase::class.java,
-                "comics")
-                .fallbackToDestructiveMigration()
-                .build()
-        }
-    }
-    return INSTANCE
 }

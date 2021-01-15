@@ -1,23 +1,23 @@
 package com.example.xkcdcomics.screens.slide
 
-import android.app.Application
 import android.content.Context
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.core.math.MathUtils
-import androidx.lifecycle.*
-import com.example.xkcdcomics.database.getComicDatabase
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.xkcdcomics.domain.XKCDComic
 import com.example.xkcdcomics.domain.xkcdComicDefault
 import com.example.xkcdcomics.repository.ComicsRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import java.lang.Exception
-import java.lang.IllegalArgumentException
+import javax.inject.Inject
 
-class SlideViewModel(application: Application) : AndroidViewModel(application) {
+class SlideViewModel @Inject constructor(val repository: ComicsRepository) : ViewModel() {
 
     // Current Comic
     private val _currentComic = MutableLiveData(xkcdComicDefault)
@@ -29,27 +29,24 @@ class SlideViewModel(application: Application) : AndroidViewModel(application) {
     val currentComicNumber: LiveData<Int>
         get() = _currentComicNumber
 
-    private val database = getComicDatabase(application)
-    private val repository = ComicsRepository(database)
-
     fun onFirstComic() {
         loadComic(1)
     }
 
     fun onLastComic() {
-        loadComic(repository.lastComic.value!!.number)
+        loadComic(repository.latestComic.value?.number ?: 1)
     }
 
     fun onPreviousComic() {
-        loadComic(currentComicNumber.value!! - 1)
+        loadComic(currentComicNumber.value?:2 - 1)
     }
 
     fun onNextComic() {
-        loadComic(currentComicNumber.value!! + 1)
+        loadComic(currentComicNumber.value?:0 + 1)
     }
 
     fun onRandomComic() {
-        loadComic((1..repository.lastComic.value!!.number).random())
+        loadComic((1..(repository.latestComic.value?.number?:1)).random())
     }
 
     fun generateEditorActionListener() : TextView.OnEditorActionListener {
@@ -85,26 +82,11 @@ class SlideViewModel(application: Application) : AndroidViewModel(application) {
     fun loadComic(number: Int) {
         _currentComicNumber.value = MathUtils.clamp(
             number,
-            1, repository.lastComic.value!!.number)
+            1, repository.latestComic.value?.number ?: 1)
 
         job?.cancel()
         job = viewModelScope.launch {
-            _currentComic.value = repository.loadComic(currentComicNumber.value!!)
+            _currentComic.value = repository.loadComic(currentComicNumber.value ?: 1)
         }
     }
-
-    init {
-        loadComic(1)
-    }
-
-    class Factory(private val application: Application) : ViewModelProvider.Factory {
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(SlideViewModel::class.java)) {
-                return SlideViewModel(application) as T
-            }
-            throw IllegalArgumentException()
-        }
-
-    }
-
 }

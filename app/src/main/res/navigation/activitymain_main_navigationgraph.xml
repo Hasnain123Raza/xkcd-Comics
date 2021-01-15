@@ -17,5 +17,9 @@
         android:id="@+id/slideFragment"
         android:name="com.example.xkcdcomics.screens.slide.SlideFragment"
         android:label="SlideFragment"
-        tools:layout="@layout/fragment_slide"/>
+        tools:layout="@layout/fragment_slide">
+        <argument
+            android:name="number"
+            app:argType="integer" />
+    </fragment>
 </navigation>

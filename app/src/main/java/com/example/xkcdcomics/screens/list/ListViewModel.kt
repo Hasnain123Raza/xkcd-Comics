@@ -1,52 +1,37 @@
 package com.example.xkcdcomics.screens.list
 
-import android.app.Application
 import android.content.Context
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.core.math.MathUtils
-import androidx.lifecycle.*
-import com.example.xkcdcomics.database.getComicDatabase
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.xkcdcomics.domain.XKCDComic
 import com.example.xkcdcomics.repository.ComicsRepository
+import com.example.xkcdcomics.screens.list.SearchFilter.Companion.getAscendingSelection
+import com.example.xkcdcomics.screens.list.SearchFilter.Companion.getDescendingSelection
 import kotlinx.coroutines.launch
-import java.lang.IllegalArgumentException
+import javax.inject.Inject
 
-class ListViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val database = getComicDatabase(application)
-    private val repository = ComicsRepository(database)
+class ListViewModel @Inject constructor(val repository: ComicsRepository) : ViewModel() {
 
     // List items to display
     val comics = repository.comics
+    val latestComic = repository.latestComic
 
-    private var comicsToShow = (1..1)
-    private var searchString = ""
-    var searchFilter = SearchFilter.ASC
+    private var comicsToShow = 1
+    val searchFilter = SearchFilter()
 
-    enum class SearchFilter {
-        ASC, DESC
-    }
-
-    fun applyFilter(listItems: List<XKCDComic>): List<XKCDComic> {
-        var selected = listItems.filter { comicsToShow.contains(it.number) }
-
-        if (searchString.isNotEmpty()) {
-            selected.filter {
-                it.title.contains(searchString, true)
-            }.also { selected = it }
+    fun applyFilter(): List<XKCDComic>? {
+        return if (comics.value != null) {
+            searchFilter.applyFilter(comicsToShow, comics.value!!)
+        } else {
+            null
         }
-
-        selected = when(searchFilter) {
-            SearchFilter.ASC -> selected
-                .sortedBy { it.number }
-            SearchFilter.DESC -> selected
-                .sortedByDescending { it.number }
-        }
-
-        return selected
     }
 
     // Event to update recyclerview's comics data
@@ -62,19 +47,42 @@ class ListViewModel(application: Application) : AndroidViewModel(application) {
         _updateRecyclerAdapterDataEvent.value = false
     }
 
-    // Load the next few comics and fire events to update recycler view
-    private var loadingComicsDebounce = false
+    // Event to reset recyclerview's position
+    private val _resetRecyclerViewPositionEvent = MutableLiveData(false)
+    val resetRecyclerViewPositionEvent : LiveData<Boolean>
+        get() = _resetRecyclerViewPositionEvent
+
+    fun fireResetRecyclerViewPositionEvent() {
+        _resetRecyclerViewPositionEvent.value = true
+    }
+
+    fun resetResetRecyclerViewPositionEvent() {
+        _resetRecyclerViewPositionEvent.value = false
+    }
+
+    // Downloading flag
+    private val _isDownloading = MutableLiveData(false)
+    val isDownloading : LiveData<Boolean>
+        get() = _isDownloading
+
     fun loadComics(amountToLoad: Int) {
-        if (loadingComicsDebounce) return
+        if (isDownloading.value!!) return
 
         viewModelScope.launch {
-            loadingComicsDebounce = true
-            comicsToShow = 1..MathUtils.clamp(
-                comicsToShow.last + amountToLoad,
-                1, comics.value?.size?:1)
-            if (comics.value != null) fireUpdateRecyclerAdapterDataEvent()
-            repository.loadComics(amountToLoad)
-            loadingComicsDebounce = false
+            _isDownloading.value = true
+            comicsToShow = MathUtils.clamp(
+                comicsToShow + amountToLoad,
+                1, repository.latestComic.value?.number?:1)
+
+            repository.loadComics(when (searchFilter.searchSetting) {
+                SearchFilter.Setting.ASC -> getAscendingSelection(
+                    comicsToShow, repository.latestComic.value?.number ?: 1)
+                SearchFilter.Setting.DESC -> getDescendingSelection(
+                    comicsToShow, repository.latestComic.value?.number ?: 1)
+            })
+
+            fireUpdateRecyclerAdapterDataEvent()
+            _isDownloading.value = false
         }
     }
 
@@ -88,7 +96,8 @@ class ListViewModel(application: Application) : AndroidViewModel(application) {
                         view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?
                     imm?.hideSoftInputFromWindow(view.windowToken, 0)
 
-                    searchString = view.text.toString()
+                    searchFilter.searchString = view.text.toString()
+                    fireResetRecyclerViewPositionEvent()
                     fireUpdateRecyclerAdapterDataEvent()
 
                     return true
@@ -97,19 +106,5 @@ class ListViewModel(application: Application) : AndroidViewModel(application) {
             }
 
         }
-    }
-
-    init {
-        loadComics(50)
-    }
-
-    class Factory(private val application: Application) : ViewModelProvider.Factory {
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(ListViewModel::class.java)) {
-                return ListViewModel(application) as T
-            }
-            throw IllegalArgumentException()
-        }
-
     }
 }

@@ -3,40 +3,57 @@ package com.example.xkcdcomics.repository
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
-import com.example.xkcdcomics.database.ComicDatabase
+import com.example.xkcdcomics.database.ComicsDatabase
 import com.example.xkcdcomics.database.asDomainModel
 import com.example.xkcdcomics.domain.XKCDComic
-import com.example.xkcdcomics.domain.xkcdComicDefault
-import com.example.xkcdcomics.network.ComicNetwork
+import com.example.xkcdcomics.network.ComicsService
 import com.example.xkcdcomics.network.asDatabaseComic
 import com.example.xkcdcomics.network.asDomainModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ComicsRepository(private val database: ComicDatabase) {
+@Singleton
+class ComicsRepository @Inject constructor(
+    database: ComicsDatabase,
+    comicsService: ComicsService
+) {
+
+    // Shortcuts
+    private val comicDao = database.comicDao
+    private val comicsService = comicsService
 
     // All Comics
-    val comics: LiveData<List<XKCDComic>> = Transformations.map(database.comicDao.getComics()) {
+    val comics: LiveData<List<XKCDComic>> = Transformations
+        .map(comicDao.getComics()) {
         it.asDomainModel()
     }
 
     // Last Comic
-    private val _lastComic = MutableLiveData(xkcdComicDefault)
-    val lastComic: LiveData<XKCDComic>
-        get() = _lastComic
+    private val _latestComic = MutableLiveData<XKCDComic>()
+    val latestComic: LiveData<XKCDComic>
+        get() = _latestComic
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
-            _lastComic.postValue(loadLatestComic())
+            var latestComic = loadLatestComic()
+            while (latestComic == null) {
+                delay(5000)
+                latestComic = loadLatestComic()
+            }
+
+            _latestComic.postValue(latestComic)
         }
     }
 
     // Load the latest comic
     private suspend fun loadLatestComic(): XKCDComic? {
         return try {
-            val comic = ComicNetwork.comic.getLatestComic()
-            database.comicDao.insert(comic.asDatabaseComic())
+            val comic = comicsService.getLatestComic()
+            comicDao.insert(comic.asDatabaseComic())
             comic.asDomainModel()
         } catch(e: Exception) {
             e.printStackTrace()
@@ -46,14 +63,14 @@ class ComicsRepository(private val database: ComicDatabase) {
 
     // Load a comic identified by its num
     suspend fun loadComic(number: Int): XKCDComic? {
-        val last = lastComic.value?.number ?:1
+        val last = latestComic.value?.number ?:1
         val range = (1..last)
         if (!range.contains(number)) { return null }
 
         return comics.value?.firstOrNull { it.number == number }
             ?: try {
-                val networkComic = ComicNetwork.comic.getComic(number)
-                database.comicDao.insert(networkComic.asDatabaseComic())
+                val networkComic = comicsService.getComic(number)
+                comicDao.insert(networkComic.asDatabaseComic())
                 networkComic.asDomainModel()
             } catch(e: Exception) {
                 e.printStackTrace()
@@ -61,19 +78,16 @@ class ComicsRepository(private val database: ComicDatabase) {
             }
     }
 
-    // Go through the comic numbers and load the first few missing comics
-    suspend fun loadComics(amountToLoad: Int) {
-        if (comics.value == null) return
-        if (lastComic.value == null) return
+    // Load comics by selection
+    suspend fun loadComics(range: IntRange): List<XKCDComic>? {
+        if (comics.value == null) return null
 
-        var comicsLoaded = 0
-
-        for (counter in (1..lastComic.value!!.number)) {
-            if (comicsLoaded == amountToLoad) return
+        for (counter in range) {
             if (comics.value!!.all { it.number != counter }) {
-                comicsLoaded++
                 loadComic(counter)
             }
         }
+
+        return comics.value?.filter { range.contains(it.number) }
     }
 }
