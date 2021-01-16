@@ -1,6 +1,7 @@
 package com.example.xkcdcomics.screens.slide
 
 import android.content.Context
+import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -38,11 +39,11 @@ class SlideViewModel @Inject constructor(val repository: ComicsRepository) : Vie
     }
 
     fun onPreviousComic() {
-        loadComic(currentComicNumber.value?:2 - 1)
+        loadComic((currentComicNumber.value?:2) - 1)
     }
 
     fun onNextComic() {
-        loadComic(currentComicNumber.value?:0 + 1)
+        loadComic((currentComicNumber.value?:0) + 1)
     }
 
     fun onRandomComic() {
@@ -80,6 +81,7 @@ class SlideViewModel @Inject constructor(val repository: ComicsRepository) : Vie
 
     private var job: Job? = null
     fun loadComic(number: Int) {
+        Log.d("Hello", number.toString())
         _currentComicNumber.value = MathUtils.clamp(
             number,
             1, repository.latestComic.value?.number ?: 1)
